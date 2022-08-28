@@ -1,0 +1,239 @@
+<script src="https://cdn.jsdelivr.net/npm/vue@2/dist/vue.js"></script>
+
+<style>
+    .tela_inteira {
+        min-height: 100vh;
+    }
+
+    .cartão {
+        margin: 20px;
+        box-shadow: rgba(50, 50, 93, 0.25) 0px 6px 12px -2px, rgba(0, 0, 0, 0.3) 0px 3px 7px -3px;
+        padding: 20px;
+        display: flex;
+        justify-content: space-around;
+    }
+
+    .container_status {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: start;
+        flex: 1;
+    }
+
+    .titulo_status {
+        font-weight: normal;
+        font-size: 25px;
+    }
+
+    .barra {
+        height: 20px;
+        width: 60%;
+        border: 2px solid black;
+    }
+
+    .barra_interna {
+        height: 20px;
+        background: rgb(0, 179, 0);
+    }
+
+    .barra_interna.vermelha {
+        background: red;
+    }
+
+    .container_botões {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .botão {
+        border: none;
+        outline: none;
+        border-radius: 5px;
+        padding-top: 8px;
+        padding-bottom: 8px;
+        padding-right: 15px;
+        padding-left: 15px;
+        cursor: pointer;
+        font-weight: bold;
+        margin-left: 10px;
+        margin-right: 10px;
+    }
+
+    .ataque {
+        background: red;
+        color: white;
+    }
+
+    .botão.ataque:hover {
+        background: rgb(255, 112, 112);
+    }
+
+    .ataque_especial {
+        background: orange;
+        color: white;
+    }
+
+    .botão.ataque_especial:hover {
+        background: rgb(255, 214, 137);
+    }
+
+    .curar {
+        background: rgb(0, 179, 0);
+        color: white;
+    }
+
+    .botão.curar:hover {
+        background: rgb(163, 255, 163);
+    }
+
+    .desistir {
+        background: blue;
+        color: white;
+    }
+
+    .botão.desistir:hover {
+        background: rgb(142, 142, 255);
+    }
+
+    .faixa {
+        background: rgb(96, 96, 236);
+        color: white;
+        width: 100%;
+        padding-top: 5px;
+        padding-bottom: 5px;
+        padding-left: 5px;
+        border: 2px solid rgb(162, 162, 255);
+        margin-bottom: 5px;
+    }
+
+    .faixa.vermelha{
+        background: rgb(255, 120, 120);
+        border: 2px solid rgb(255, 162, 162);
+    }
+
+</style>
+
+<div id="app">
+    <div class="tela_inteira">
+        <section class="cartão">
+            <div class="container_status">
+                <h3 class="titulo_status">Jogador</h3>
+                <div class="barra">
+                    <div :class="['barra_interna', {vermelha: vida_jogador_critica}]"
+                        :style="{width: `${vida_jogador}%`}"></div>
+                </div>
+                <p>{{vida_jogador.toFixed(0)}}%</p>
+            </div>
+            <div class="container_status">
+                <h3 class="titulo_status">Monstro</h3>
+                <div class="barra">
+                    <div :class="['barra_interna', {vermelha: vida_monstro_critica}]"
+                        :style="{width: `${vida_monstro}%`}"></div>
+                </div>
+                <p>{{vida_monstro.toFixed(0)}}%</p>
+            </div>
+        </section>
+        <section class="cartão">
+            <div class="container_botões">
+                <template v-if="tela_de_inicio">
+                    <button class="botão desistir" @click="tela_de_inicio = !tela_de_inicio">Iniciar Novo jogo</button>
+                </template>
+                <template v-else>
+                    <button class="botão ataque" @click="ataque_normal">Ataque</button>
+                    <button class="botão ataque_especial" @click="ataque_especial">Ataque Especial</button>
+                    <button class="botão curar" @click="curar">Curar</button>
+                    <button class="botão desistir" @click="desistir()">Desistir</button>
+                </template>
+            </div>
+        </section>
+        <template v-if="historico.length > 0">
+            <section class="cartão">
+                <div :style="'width:100%'">
+                    <template v-for="objeto in historico">
+                        <div :class="['faixa', {vermelha: (objeto.nome == 'Monstro') }]">
+                            {{objeto.nome}} {{objeto.tipo == 'dano' ? 'atacou com' : 'curou em'}}
+                            {{objeto.valor.toFixed(0)}}% de {{objeto.tipo == 'dano' ? 'dano' : 'vida'}}.
+                        </div>
+                    </template>
+                </div>
+            </section>
+        </template>
+    </div>
+</div>
+
+<script>
+    new Vue({
+        el: '#app',
+        data: {
+            vida_jogador: 100,
+            vida_monstro: 100,
+            historico: [],
+            tela_de_inicio: true,
+            vida_jogador_critica: false,
+            vida_monstro_critica: false
+        },
+        methods: {
+            ataque_normal() {
+                let dano_do_jogador = Math.random() * 10;
+                this.vida_monstro = this.vida_monstro - dano_do_jogador;
+                this.historico.push({ nome: 'Jogador', valor: dano_do_jogador, tipo: 'dano' });
+                this.ataque_do_monstro();
+            },
+            ataque_especial() {
+                let dano_do_jogador = Math.random() * 20;
+                this.vida_monstro = this.vida_monstro - dano_do_jogador
+                this.historico.push({ nome: 'Jogador', valor: dano_do_jogador, tipo: 'dano' });
+                this.ataque_do_monstro();
+            },
+            curar() {
+                let cura_do_jogador = Math.random() * 12;
+                this.vida_jogador = this.vida_jogador + cura_do_jogador;
+                this.historico.push({ nome: 'Jogador', valor: cura_do_jogador, tipo: 'cura' });
+                this.ataque_do_monstro();
+            },
+            desistir() {
+                this.vida_jogador = 100;
+                this.vida_monstro = 100;
+                this.historico = [];
+                this.tela_de_inicio = !this.tela_de_inicio;
+                this.vida_jogador_critica = false;
+                this.vida_monstro_critica = false;
+            },
+            ataque_do_monstro() {
+                let dano_do_monstro = Math.random() * 13;
+                this.vida_jogador = this.vida_jogador - dano_do_monstro;
+                this.historico.push({ nome: 'Monstro', valor: dano_do_monstro, tipo: 'dano' });
+            }
+        },
+        watch: {
+            vida_jogador() {
+                if (this.vida_jogador >= 100) {
+                    this.vida_jogador = 100;
+                }
+                if (this.vida_jogador <= 0) {
+                    this.vida_jogador = 0;
+                    alert("Monstro ganhou!");
+                    this.desistir();
+                }
+                if (this.vida_jogador < 20) {
+                    this.vida_jogador_critica = true
+                }
+            },
+            vida_monstro() {
+                if (this.vida_monstro >= 100) {
+                    this.vida_monstro = 100;
+                }
+                if (this.vida_monstro < 0) {
+                    this.vida_monstro = 0;
+                    alert("Jogador ganhou!");
+                    this.desistir();
+                }
+                if (this.vida_monstro < 20) {
+                    this.vida_monstro_critica = true
+                }
+            }
+        }
+    })
+</script>
